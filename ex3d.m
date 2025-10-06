@@ -168,24 +168,101 @@ for k = 1:nev
     H_total = H_total + Hk(:);
 end
 
-%% 3d – Mass-proportional Rayleigh damping (β = 0)
-xi_target = 0.02;    % desired damping ratio
-mode_ref  = 3;       % reference mode for which ξ = 0.02
+%% Plot FRF: magnitude and phase (total + individual contributions)
+figure('Name','FRF (modal superposition)','NumberTitle','off');
+
+% Magnitude
+subplot(2,1,1);
+for k = 1:length(omega_n)
+    loglog(f, abs(H_modes(:,k)), 'LineWidth', 1.5);  % only individual modes
+    hold on;
+end
+hold off;
+xlabel('Frequency [Hz]'); ylabel('|H| [m/N]');
+title('Direct FRF (collocated at right-end) - total (black) + modal contributions');
+legendEntries = ['Total', arrayfun(@(kk) sprintf('Mode %d',kk), 1:nev, 'UniformOutput', false)];
+legend(legendEntries, 'Location','Best');
+grid on;
+
+% Phase
+subplot(2,1,2);
+for k = 1:length(omega_n)
+    semilogx(f, angle(H_modes(:,k))*180/pi, 'LineWidth', 1.5);
+    hold on;
+end
+hold off;
+xlabel('Frequency [Hz]'); ylabel('Phase [deg]');
+grid on;
+
+%% 3d
+xi_target = 0.02;        % desired damping ratio
+mode_ref  = 3;           % reference mode = 3rd mode
 omega_ref = omega_n(mode_ref);
 
-alpha = 2 * xi_target * omega_ref;
+alpha = 2 * xi_target * omega_ref;  % Rayleigh mass coefficient
 beta  = 0;
 
-xi_all = 0.5*(alpha./omega_n);
+fprintf('\nAssignment 3d – Mass-proportional Rayleigh damping:\n');
+fprintf('Reference mode = %d\n', mode_ref);
+fprintf('alpha = %.4e\n', alpha);
+fprintf('beta  = %.4e (set to zero)\n', beta);
+
+xi_all = 0.5 * (alpha ./ omega_n);   % β = 0
 fprintf('\nResulting damping ratios for each mode:\n');
 disp(xi_all.');
 
-% Plot
-figure;
+% Plot damping ratios vs mode number
+figure('Name','Damping ratios (mass-proportional)','NumberTitle','off');
 plot(1:length(omega_n), xi_all, 'o-', 'LineWidth',1.5);
 xlabel('Mode number'); ylabel('\xi_k [-]');
-title('Damping ratios for mass-proportional Rayleigh damping (beta=0)');
+title('Damping ratios for mass-proportional Rayleigh damping (β = 0)');
 grid on;
+
+f = 0.2:0.2:500;     % Hz
+w = 2*pi*f;          % rad/s
+H_total = zeros(length(w),1);
+H_modes = zeros(length(w), length(omega_n));
+
+% excitation/response DOF: right-end vertical displacement
+respDof = find(rowColIdxs == (2*nno - 1));  
+excDof  = respDof;
+
+for k = 1:length(omega_n)
+    phi_r = V(respDof,k);
+    phi_q = V(excDof,k);
+    xi_k  = xi_all(k);
+    denom = (omega_n(k)^2 - w.^2 + 2j*xi_k*omega_n(k)*w);
+    Hk = (phi_r * phi_q) ./ (mk(k) * denom);
+    H_modes(:,k) = Hk;
+    H_total = H_total + Hk;
+end
+
+figure('Name','FRF (mass-proportional damping)','NumberTitle','off');
+
+subplot(2,1,1);
+for k = 1:length(omega_n)
+    loglog(f, abs(H_modes(:,k)), 'LineWidth', 1.5);  % only individual modes
+    hold on;
+end
+hold off;
+xlabel('Frequency [Hz]');
+ylabel('|H| [m/N]');
+title('FRF (modal contributions only, β=0, ξ₃=0.02)');
+legend(arrayfun(@(kk) sprintf('Mode %d', kk), 1:length(omega_n), 'UniformOutput', false));
+grid on;
+
+% Phase plot
+subplot(2,1,2);
+for k = 1:length(omega_n)
+    semilogx(f, angle(H_modes(:,k))*180/pi, 'LineWidth', 1.5);
+    hold on;
+end
+hold off;
+xlabel('Frequency [Hz]');
+ylabel('Phase [deg]');
+grid on;
+
+
 
 %% 3e 
 xi_target = 0.02;    % desired damping ratio
@@ -204,30 +281,47 @@ plot(1:length(omega_n), xi_all, 'o-', 'LineWidth',1.5);
 xlabel('Mode number'); ylabel('\xi_k [-]');
 title('Damping ratios for mass-proportional Rayleigh damping (alpha=0)');
 grid on;
-%% Plot FRF: magnitude and phase (total + individual contributions)
-figure('Name','FRF (modal superposition)','NumberTitle','off');
 
-% Magnitude
+f = 0.2:0.2:500;     % Hz
+w = 2*pi*f;          % rad/s
+H_total = zeros(length(w),1);
+H_modes = zeros(length(w), length(omega_n));
+
+% excitation/response DOF: right-end vertical displacement
+respDof = find(rowColIdxs == (2*nno - 1));  
+excDof  = respDof;
+
+for k = 1:length(omega_n)
+    phi_r = V(respDof,k);
+    phi_q = V(excDof,k);
+    xi_k  = xi_all(k);
+    denom = (omega_n(k)^2 - w.^2 + 2j*xi_k*omega_n(k)*w);
+    Hk = (phi_r * phi_q) ./ (mk(k) * denom);
+    H_modes(:,k) = Hk;
+    H_total = H_total + Hk;
+end
+
+figure('Name','FRF (stiffness-proportional damping)','NumberTitle','off');
+
 subplot(2,1,1);
-loglog(f, abs(H_total), 'k-', 'LineWidth', 2);
-hold on;
-colors = lines(nev);
-for k = 1:nev
-    loglog(f, abs(H_modes(:,k)), '-', 'LineWidth', 1, 'Color', colors(k,:));
+for k = 1:length(omega_n)
+    loglog(f, abs(H_modes(:,k)), 'LineWidth', 1.5);  % only individual modes
+    hold on;
 end
 hold off;
-xlabel('Frequency [Hz]'); ylabel('|H| [m/N]');
-title('Direct FRF (collocated at right-end) - total (black) + modal contributions');
-legendEntries = ['Total', arrayfun(@(kk) sprintf('Mode %d',kk), 1:nev, 'UniformOutput', false)];
-legend(legendEntries, 'Location','Best');
+xlabel('Frequency [Hz]');
+ylabel('|H| [m/N]');
+title('FRF (modal contributions only, \alpha=0, ξ₃=0.02)');
+legend(arrayfun(@(kk) sprintf('Mode %d', kk), 1:length(omega_n), 'UniformOutput', false));
 grid on;
 
-% Phase
+% Phase plot
 subplot(2,1,2);
-semilogx(f, angle(H_total)*180/pi, 'k-', 'LineWidth', 2); hold on;
-for k = 1:nev
-    semilogx(f, angle(H_modes(:,k))*180/pi, '-', 'LineWidth', 1, 'Color', colors(k,:));
+for k = 1:length(omega_n)
+    semilogx(f, angle(H_modes(:,k))*180/pi, 'LineWidth', 1.5);
+    hold on;
 end
 hold off;
-xlabel('Frequency [Hz]'); ylabel('Phase [deg]');
+xlabel('Frequency [Hz]');
+ylabel('Phase [deg]');
 grid on;

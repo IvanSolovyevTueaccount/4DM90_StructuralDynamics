@@ -66,7 +66,7 @@ coeffs = solve([BC1; BC2], [A, B]);
 % Extract the coefficients for the boundary conditions
 A_val = coeffs.A;
 B_val = coeffs.B;
-C_val = 0.5;
+C_val = 0;
 D_val = 1;
 sig_val = 1;
 

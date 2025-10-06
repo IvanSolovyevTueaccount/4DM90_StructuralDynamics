@@ -150,5 +150,3 @@ H = zeros(size(u0,1));
 for k = 1:n
     H = H + (u0(:,k) * u0(:,k)') / (m(k) * (omega0(k)^2 - omega^2));
 end
-
-

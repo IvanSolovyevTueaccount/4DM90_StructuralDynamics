@@ -241,7 +241,7 @@ figure('Name','FRF (mass-proportional damping)','NumberTitle','off');
 
 subplot(2,1,1);
 for k = 1:length(omega_n)
-    loglog(f, abs(H_modes(:,k)), 'LineWidth', 1.5);  % only individual modes
+    loglog( abs(H_modes(:,k)), 'LineWidth', 1.5);  % only individual modes
     hold on;
 end
 hold off;
@@ -254,7 +254,7 @@ grid on;
 % Phase plot
 subplot(2,1,2);
 for k = 1:length(omega_n)
-    semilogx(f, angle(H_modes(:,k))*180/pi, 'LineWidth', 1.5);
+    semilogx(angle(H_modes(:,k))*180/pi, 'LineWidth', 1.5);
     hold on;
 end
 hold off;
@@ -305,7 +305,7 @@ figure('Name','FRF (stiffness-proportional damping)','NumberTitle','off');
 
 subplot(2,1,1);
 for k = 1:length(omega_n)
-    loglog(f, abs(H_modes(:,k)), 'LineWidth', 1.5);  % only individual modes
+    loglog(abs(H_modes(:,k)), 'LineWidth', 1.5);  % only individual modes
     hold on;
 end
 hold off;
@@ -318,7 +318,7 @@ grid on;
 % Phase plot
 subplot(2,1,2);
 for k = 1:length(omega_n)
-    semilogx(f, angle(H_modes(:,k))*180/pi, 'LineWidth', 1.5);
+    semilogx(angle(H_modes(:,k))*180/pi, 'LineWidth', 1.5);
     hold on;
 end
 hold off;

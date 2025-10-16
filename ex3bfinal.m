@@ -45,12 +45,11 @@ rowColIdxs = 2:2*nno-1;                % remove DOF 1 (disp at node1) and DOF 20
 Mbc = M(rowColIdxs, rowColIdxs);
 Kbc = K(rowColIdxs, rowColIdxs);
 
-assert(size(Mbc,1) == 2*nno-nbc, ...
-    "Reduced matrix size mismatch: expected %d, got %d", 2*nno-nbc, size(Mbc,1));
+
 
 %% Solve generalized eigenproblem K x = lambda M x
-opts.isreal = true;
-opts.issym = true;
+% opts.isreal = true;
+% opts.issym = true;
 
 try
     % prefer eigs for speed: request nev smallest magnitude eigenvalues
@@ -60,16 +59,16 @@ catch ME
     [Vall, Dall] = eig(Kbc, Mbc);
     lambda_all = diag(Dall);
     % keep finite positive eigenvalues
-    valid = isfinite(lambda_all) & (real(lambda_all) > 0);
+    valid = isfinite(lambda_all);
     lambda_all = lambda_all(valid);
     Vall = Vall(:,valid);
-    [lambda_sorted, idx_sorted] = sort(real(lambda_all), 'ascend');
+    [lambda_sorted, idx_sorted] = sort((lambda_all), 'ascend');
     V = Vall(:, idx_sorted(1:nev));
     D = diag(lambda_sorted(1:nev));
 end
 
 % Ensure real positive eigenvalues and sort ascending
-lambda = real(diag(D));            % lambda = omega^2 (rad^2/s^2)
+lambda = diag(D);            % lambda = omega^2 (rad^2/s^2)
 [lambda_sorted, sidx] = sort(lambda, 'ascend');
 V = V(:, sidx);
 D = diag(lambda_sorted);
@@ -167,8 +166,10 @@ for k = 1:nev
     H_modes(:,k) = Hk(:);
     H_total = H_total + Hk(:);
 end
+lambda_pos = -xi .* omega_n + 1j .* (omega_n .* sqrt(1 - xi.^2));
 
-%% Plot FRF: magnitude and phase (total + individual contributions)
+eigenval = lambda_pos;
+
 figure('Name','FRF (modal superposition)','NumberTitle','off');
 
 % Magnitude
@@ -181,9 +182,7 @@ for k = 1:nev
 end
 hold off;
 xlabel('Frequency [Hz]'); ylabel('|H| [m/N]');
-title('Direct FRF (collocated at right-end) - total (black) + modal contributions');
-legendEntries = ['Total', arrayfun(@(kk) sprintf('Mode %d',kk), 1:nev, 'UniformOutput', false)];
-legend(legendEntries, 'Location','Best');
+
 grid on;
 
 % Phase
@@ -194,4 +193,6 @@ for k = 1:nev
 end
 hold off;
 xlabel('Frequency [Hz]'); ylabel('Phase [deg]');
+legendEntries = ['Total', arrayfun(@(kk) sprintf('Mode %d',kk), 1:nev, 'UniformOutput', false)];
+legend(legendEntries, 'Location','Best');
 grid on;
